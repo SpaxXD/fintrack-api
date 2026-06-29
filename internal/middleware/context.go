@@ -9,14 +9,8 @@ import (
 type contextKey string
 
 const (
-	// RequestIDKey is the context key for the request ID.
 	RequestIDKey contextKey = "request_id"
-	// UserIDKey is the context key for the authenticated user ID.
-	UserIDKey contextKey = "user_id"
-
-	// unexported aliases used internally by tests and middleware
-	requestIDKey = RequestIDKey
-	userIDKey    = UserIDKey
+	UserIDKey    contextKey = "user_id"
 )
 
 // GetRequestID retrieves the request ID from the context.

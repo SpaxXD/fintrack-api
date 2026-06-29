@@ -59,7 +59,6 @@ func Logger(logger zerolog.Logger) func(http.Handler) http.Handler {
 			if wrapped.statusCode >= http.StatusInternalServerError {
 				event = logger.Error()
 
-				// Include user_id in error logs when available
 				userID := GetUserID(r.Context())
 				if userID != [16]byte{} {
 					event = event.Str("user_id", userID.String())

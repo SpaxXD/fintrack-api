@@ -98,7 +98,6 @@ func (s *authService) Login(ctx context.Context, req LoginRequest) (*TokenPair, 
 		return nil, ve
 	}
 
-	// Check rate limiting
 	attempts, lockedUntil, err := s.userRepo.GetFailedAttempts(ctx, req.Email)
 	if err != nil {
 		return nil, fmt.Errorf("checking failed attempts: %w", err)
@@ -107,22 +106,18 @@ func (s *authService) Login(ctx context.Context, req LoginRequest) (*TokenPair, 
 		return nil, domain.ErrRateLimited
 	}
 
-	// Get user by email
 	user, err := s.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, domain.ErrUnauthorized
 	}
 
-	// Compare password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		_ = s.userRepo.IncrementFailedAttempts(ctx, req.Email)
 		return nil, domain.ErrUnauthorized
 	}
 
-	// Reset failed attempts on success
 	_ = s.userRepo.ResetFailedAttempts(ctx, req.Email)
 
-	// Generate token pair
 	pair, err := s.generateTokenPair(ctx, user.ID)
 	if err != nil {
 		return nil, err
@@ -138,22 +133,18 @@ func (s *authService) RefreshToken(ctx context.Context, refreshTokenStr string) 
 		return nil, domain.ErrUnauthorized
 	}
 
-	// Check if token is expired
 	if time.Now().After(token.ExpiresAt) {
 		return nil, domain.ErrUnauthorized
 	}
 
-	// Check if token is already revoked
 	if token.Revoked {
 		return nil, domain.ErrUnauthorized
 	}
 
-	// Revoke current refresh token
 	if err := s.tokenRepo.Revoke(ctx, token.ID); err != nil {
 		return nil, fmt.Errorf("revoking refresh token: %w", err)
 	}
 
-	// Generate new token pair
 	pair, err := s.generateTokenPair(ctx, token.UserID)
 	if err != nil {
 		return nil, err
@@ -166,7 +157,6 @@ func (s *authService) RefreshToken(ctx context.Context, refreshTokenStr string) 
 func (s *authService) generateTokenPair(ctx context.Context, userID uuid.UUID) (*TokenPair, error) {
 	now := time.Now()
 
-	// Generate access token (JWT)
 	accessClaims := jwt.MapClaims{
 		"sub": userID.String(),
 		"exp": jwt.NewNumericDate(now.Add(s.jwtCfg.AccessTokenExpiry)),
@@ -177,7 +167,6 @@ func (s *authService) generateTokenPair(ctx context.Context, userID uuid.UUID) (
 		return nil, fmt.Errorf("signing access token: %w", err)
 	}
 
-	// Generate refresh token (random UUID)
 	refreshTokenStr := uuid.New().String()
 	refreshToken := &domain.RefreshToken{
 		ID:        uuid.New(),

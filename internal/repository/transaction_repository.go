@@ -112,9 +112,6 @@ func (r *TransactionRepository) SoftDelete(ctx context.Context, id uuid.UUID) er
 	return nil
 }
 
-// --- Helper functions ---
-
-// uuidToPgtype converts a *uuid.UUID to pgtype.UUID for nullable UUID columns.
 func uuidToPgtype(id *uuid.UUID) pgtype.UUID {
 	if id == nil {
 		return pgtype.UUID{Valid: false}
@@ -122,7 +119,6 @@ func uuidToPgtype(id *uuid.UUID) pgtype.UUID {
 	return pgtype.UUID{Bytes: *id, Valid: true}
 }
 
-// pgtypeToUUID converts a pgtype.UUID to *uuid.UUID.
 func pgtypeToUUID(id pgtype.UUID) *uuid.UUID {
 	if !id.Valid {
 		return nil
@@ -131,26 +127,17 @@ func pgtypeToUUID(id pgtype.UUID) *uuid.UUID {
 	return &u
 }
 
-// timeToPgDate converts a time.Time to pgtype.Date.
 func timeToPgDate(t time.Time) pgtype.Date {
-	return pgtype.Date{
-		Time:  t,
-		Valid: true,
-	}
+	return pgtype.Date{Time: t, Valid: true}
 }
 
-// timePtrToPgDate converts a *time.Time to pgtype.Date (null if nil).
 func timePtrToPgDate(t *time.Time) pgtype.Date {
 	if t == nil {
 		return pgtype.Date{Valid: false}
 	}
-	return pgtype.Date{
-		Time:  *t,
-		Valid: true,
-	}
+	return pgtype.Date{Time: *t, Valid: true}
 }
 
-// transactionTypeToPgText converts a *domain.TransactionType to pgtype.Text.
 func transactionTypeToPgText(t *domain.TransactionType) pgtype.Text {
 	if t == nil {
 		return pgtype.Text{Valid: false}
@@ -158,7 +145,6 @@ func transactionTypeToPgText(t *domain.TransactionType) pgtype.Text {
 	return pgtype.Text{String: string(*t), Valid: true}
 }
 
-// pgDateToTime converts a pgtype.Date to time.Time.
 func pgDateToTime(d pgtype.Date) time.Time {
 	if !d.Valid {
 		return time.Time{}

@@ -19,7 +19,6 @@ func Auth(secret string) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 
-			// Check for missing or malformed Authorization header.
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 				writeAuthError(w, r, "unauthorized", "missing or malformed authorization header")
 				return
@@ -27,14 +26,12 @@ func Auth(secret string) func(http.Handler) http.Handler {
 
 			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
-			// Validate JWT structure: must have exactly 3 dot-separated segments.
 			segments := strings.Split(tokenStr, ".")
 			if len(segments) != 3 {
 				writeAuthError(w, r, "unauthorized", "invalid token structure")
 				return
 			}
 
-			// Parse and validate JWT with HS256.
 			token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, errors.New("unexpected signing method")
@@ -43,7 +40,6 @@ func Auth(secret string) func(http.Handler) http.Handler {
 			})
 
 			if err != nil {
-				// Check if the error is specifically about expiration.
 				if errors.Is(err, jwt.ErrTokenExpired) {
 					writeAuthError(w, r, "token_expired", "access token has expired")
 					return
@@ -57,7 +53,6 @@ func Auth(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Extract the "sub" claim (user_id).
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
 				writeAuthError(w, r, "unauthorized", "invalid token claims")
@@ -76,7 +71,6 @@ func Auth(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Inject user ID into request context.
 			ctx := context.WithValue(r.Context(), UserIDKey, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

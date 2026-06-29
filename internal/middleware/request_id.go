@@ -16,13 +16,8 @@ const HeaderXRequestID = "X-Request-ID"
 func RequestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := uuid.New().String()
-
-		// Set the response header.
 		w.Header().Set(HeaderXRequestID, id)
-
-		// Store the request ID in the context using the shared key.
 		ctx := context.WithValue(r.Context(), RequestIDKey, id)
-
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
